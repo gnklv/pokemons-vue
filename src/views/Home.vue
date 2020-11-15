@@ -60,7 +60,7 @@ export default defineComponent({
       state.pokemons = pokemons;
     };
 
-    const { search, setSearch } = useSearch(pokemonsUnselected, setPokemons);
+    const { search, searchPokemons } = useSearch(pokemonsUnselected, setPokemons);
 
     const isLoading = ref(true);
 
@@ -74,16 +74,20 @@ export default defineComponent({
 
     watch(
       () => pokemonsUnselected.value.length,
-      (curLength, prevLength) => {
-        if (curLength < prevLength) {
+      () => {
+        if (search.value) {
+          setPokemons(searchPokemons(search.value));
+        } else {
           setPokemons(pokemonsUnselected.value);
-          setSearch('');
         }
       },
     );
 
     return {
-      pokemons: toRef(state, 'pokemons'), pokemonsSelected, isLoading, search,
+      pokemons: toRef(state, 'pokemons'),
+      pokemonsSelected,
+      isLoading,
+      search,
     };
   },
 });

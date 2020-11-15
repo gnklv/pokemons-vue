@@ -6,9 +6,6 @@ import type { Pokemon } from '@/store/state';
 
 const useSearch = (pokemons: Ref<Pokemon[]>, setPokemons: (pokemon: Pokemon[]) => void) => {
   const search = ref('');
-  const setSearch = (s: string) => {
-    search.value = s;
-  };
 
   const searchByName = (pokemon: Pokemon, s: string): boolean => (
     pokemon.name.toLowerCase().startsWith(s.toLowerCase())
@@ -18,24 +15,25 @@ const useSearch = (pokemons: Ref<Pokemon[]>, setPokemons: (pokemon: Pokemon[]) =
       (`#${ability.name.toLowerCase()}`).startsWith(s.toLowerCase())
     ))
   );
-  const filterPokemons = (pokemon: Pokemon, s: string) => (
-    s.startsWith('#')
-      ? searchByAbility(pokemon, s)
-      : searchByName(pokemon, s)
-  );
+  const searchPokemons = (s: string): Pokemon[] => {
+    const result = pokemons.value.filter((pokemon) => (
+      s.startsWith('#')
+        ? searchByAbility(pokemon, s)
+        : searchByName(pokemon, s)
+    ));
+    console.log('filter', result);
+
+    return result;
+  };
 
   watch(
     () => search.value,
-    debounce((v) => {
-      const filteredPokemons = v
-        ? pokemons.value.filter((pokemon) => filterPokemons(pokemon, v))
-        : pokemons.value;
-
-      setPokemons(filteredPokemons);
+    debounce((s: string) => {
+      setPokemons(s ? searchPokemons(s) : pokemons.value);
     }, 500),
   );
 
-  return { search, setSearch };
+  return { search, searchPokemons };
 };
 
 export default useSearch;
