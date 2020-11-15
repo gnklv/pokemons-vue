@@ -10,6 +10,7 @@
               {{ name }}
             </strong> {{ toSelected ? 'moved to' : 'removed from' }} selected pokemons
           </v-list-item-title>
+
           <v-list-item-subtitle>
             {{ time | date }}
           </v-list-item-subtitle>

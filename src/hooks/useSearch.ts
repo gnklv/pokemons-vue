@@ -1,56 +1,41 @@
 import type { Ref } from '@vue/composition-api';
-import {
-  reactive, ref, toRef, watch,
-} from '@vue/composition-api';
+import { ref, watch } from '@vue/composition-api';
 import debounce from 'lodash.debounce';
 
 import type { Pokemon } from '@/store/state';
 
-const useSearch = (pokemons: Ref<Pokemon[]>) => {
-  const state = reactive<{ pokemons: Pokemon[] }>({
-    pokemons: pokemons.value,
-  });
+const useSearch = (pokemons: Ref<Pokemon[]>, setPokemons: (pokemon: Pokemon[]) => void) => {
   const search = ref('');
+  const setSearch = (s: string) => {
+    search.value = s;
+  };
 
   const searchByName = (pokemon: Pokemon, s: string): boolean => (
     pokemon.name.toLowerCase().startsWith(s.toLowerCase())
   );
-
   const searchByAbility = (pokemon: Pokemon, s: string): boolean => (
     pokemon.abilities.some(({ ability }) => (
       (`#${ability.name.toLowerCase()}`).startsWith(s.toLowerCase())
     ))
   );
-
-  watch(
-    () => pokemons.value.length,
-    (currentValue, prevValue) => {
-      if (currentValue < prevValue) {
-        search.value = '';
-      }
-
-      state.pokemons = pokemons.value;
-    },
+  const filterPokemons = (pokemon: Pokemon, s: string) => (
+    s.startsWith('#')
+      ? searchByAbility(pokemon, s)
+      : searchByName(pokemon, s)
   );
 
   watch(
     () => search.value,
     debounce((v) => {
-      if (v) {
-        state.pokemons = pokemons.value.filter((pokemon) => (
-          v.startsWith('#') ? searchByAbility(pokemon, v) : searchByName(pokemon, v)
-        ));
-      } else {
-        state.pokemons = pokemons.value;
-      }
+      const filteredPokemons = v
+        ? pokemons.value.filter((pokemon) => filterPokemons(pokemon, v))
+        : pokemons.value;
+
+      setPokemons(filteredPokemons);
     }, 500),
-    { immediate: true },
   );
 
-  return {
-    search,
-    pokemons: toRef(state, 'pokemons'),
-  };
+  return { search, setSearch };
 };
 
 export default useSearch;
