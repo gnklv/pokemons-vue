@@ -1,18 +1,64 @@
 <template>
   <div class="home">
-    <img alt="Vue logo" src="../assets/logo.png">
-    <HelloWorld msg="Welcome to Your Vue.js + TypeScript App"/>
+    <h1 class="text-h2 mb-4">Choose your pokemon</h1>
+    <v-progress-circular
+      v-if="isLoading"
+      color="primary"
+      indeterminate
+    />
+    <v-row v-else>
+      <v-col sm="6">
+        <v-text-field
+          v-model.trim="search"
+          placeholder="Name or #Ability"
+          autofocus
+          clearable
+          solo
+        />
+        <PokemonsList :pokemons="pokemons"/>
+      </v-col>
+      <v-col v-if="!!pokemonsSelected.length" sm="6">
+        <h2 class="text-h4 mb-10">Selected pokemons: </h2>
+        <PokemonsList :pokemons="pokemonsSelected" short />
+      </v-col>
+    </v-row>
   </div>
 </template>
 
 <script lang="ts">
-import { Component, Vue } from 'vue-property-decorator';
-import HelloWorld from '@/components/HelloWorld.vue'; // @ is an alias to /src
+import { defineComponent, ref, onMounted } from '@vue/composition-api';
+import { useGetters, useActions } from 'vuex-composition-helpers';
 
-@Component({
-  components: {
-    HelloWorld,
+import type { RootGetters } from '@/store/getters';
+import type { RootActions } from '@/store/actions';
+
+import useSearch from '@/hooks/useSearch';
+
+import PokemonsList from '@/components/common/PokemonsList.vue';
+
+export default defineComponent({
+  components: { PokemonsList },
+  setup() {
+    const isLoading = ref(true);
+
+    const {
+      pokemonsUnselected,
+      pokemonsSelected,
+    } = useGetters<RootGetters>(['pokemonsUnselected', 'pokemonsSelected']);
+    const { fetchPokemons } = useActions<RootActions>(['fetchPokemons']);
+
+    const { search, pokemons } = useSearch(pokemonsUnselected);
+
+    onMounted(async () => {
+      if (pokemons.value.length === 0) {
+        await fetchPokemons();
+      }
+      isLoading.value = false;
+    });
+
+    return {
+      pokemons, pokemonsSelected, isLoading, search,
+    };
   },
-})
-export default class Home extends Vue {}
+});
 </script>
