@@ -21,7 +21,6 @@ const useSearch = (pokemons: Ref<Pokemon[]>, setPokemons: (pokemon: Pokemon[]) =
         ? searchByAbility(pokemon, s)
         : searchByName(pokemon, s)
     ));
-    console.log('filter', result);
 
     return result;
   };
